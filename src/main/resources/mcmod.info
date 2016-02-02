@@ -1,0 +1,16 @@
+[
+{
+  "modid": "partixel",
+  "name": "Partixel",
+  "description": "A performant particle engine for Minecraft.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["WeAthFolD"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
