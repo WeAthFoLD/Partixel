@@ -1,5 +1,6 @@
 package weathfold.partixel.api;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.util.vector.Vector3f;
@@ -13,7 +14,7 @@ public class ParticleSystem {
 
     public static class Builder {
 
-        private final List<Supplier<? extends ParticleAttr>> requiredAttr = new ArrayList<>();
+        private final List<Function<Particle, ? extends ParticleAttr>> requiredAttr = new ArrayList<>();
         private final List<IParticleUpdater> updaters = new ArrayList<>();
         private boolean consistent = true;
         private int maxPoolSize = 2500;
@@ -22,7 +23,7 @@ public class ParticleSystem {
         private float initSize = 1;
         private boolean localSpace = false;
 
-        public <T extends ParticleAttr> Builder requireAttr(Supplier<T> supplier) {
+        public <T extends ParticleAttr> Builder requireAttr(Function<Particle, T> supplier) {
             requiredAttr.add(supplier);
             return this;
         }
@@ -90,7 +91,7 @@ public class ParticleSystem {
 
     // FINAL ATTRS
     private int maxPoolSize;
-    private List<Supplier<? extends ParticleAttr>> requiredAttr;
+    private List<Function<Particle, ? extends ParticleAttr>> requiredAttr;
     private IParticleUpdater updaters[];
     private boolean consistent;
     private ResourceLocation texture;
@@ -137,20 +138,22 @@ public class ParticleSystem {
     /**
      * Quick alias for waking up an particle acquired by {@link #idle()} and returning it.
      */
-    public Particle spawn() {
+    public Particle wakeNew() {
         Particle p = idle();
         wake(p);
         return p;
     }
 
+    /**
+     * Wake the given particle.
+     * The particle will be made alive in the next tick. <br>
+     *
+     * If the particle isn't created with this ParticleSystem, or is already alive, yields undefined result.
+     */
     public void wake(Particle p) {
         toWake.add(p);
     }
 
-    /**
-     * Wake the given particle.
-     * The particle will be made alive in the next tick.
-     */
     private void __realWake(Particle p) {
         for (IParticleUpdater updater : updaters) {
             updater.onWake(p);
@@ -173,8 +176,8 @@ public class ParticleSystem {
         Particle p = new Particle(this);
 
         // Construct attrs
-        for (Supplier<? extends ParticleAttr> sup : requiredAttr) {
-            ParticleAttr attr = sup.get();
+        for (Function<Particle, ? extends ParticleAttr> sup : requiredAttr) {
+            ParticleAttr attr = sup.apply(p);
 
             p.attributes.put(attr.getClass(), attr);
         }
